@@ -111,3 +111,7 @@ To generate visualization run, Make sure you corrected the models path
 ```visual
 python visual/visualization.py
 ```# Role-of-Equivariance
+
+## Contributing
+
+>📋  Feel free to use the code and make Improvements. 
