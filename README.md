@@ -101,7 +101,7 @@ Running the evaluation/test python scripts will generate CSV file with test resu
 
 ![Adversarial robustness comparison of five models using 4-layer architectures on CIFAR-10 and CIFAR-100. ](output/cifar100_fgsm_pgd_accuracy_BaselineCNN_ParallelGCNN_RotScale_10_layers_bar_plot.jpg)
 ![Adversarial robustness comparison of five models using 10-layer architectures on CIFAR-10 and CIFAR-100](output/cifar10_100_10layers_adversarial_accuracy_all_models_combined_with_errorbars.jpg)
-![Ablation study results on CIFAR-100 comparing the adversarial robustness of four models under FGSM (left) and PGD (right) attacks ](output/cifar10_100_adversarial_accuracy_all_models_combined.pdf)
+![Ablation study results on CIFAR-100 comparing the adversarial robustness of four models under FGSM (left) and PGD (right) attacks ](output/cifar10_100_4layer_adversarial_accuracy_all_models_combined.jpg)
 ![Visualization of perturbation tolerance](output/Img19.jpg)
 ![Visualization of perturbation tolerance](output/Img22.jpg)
 ![Visualization of perturbation tolerance](output/Img29.jpg)
