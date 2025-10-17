@@ -99,12 +99,12 @@ Models trained on CIFAR10 are in `cifar10_models` folder and similary CIFAR100 m
 ## Results
 Running the evaluation/test python scripts will generate CSV file with test results based on these data Figures and Tables in the paper are generated. We compare our proposed models perfomance with regular CNN architectured model which we are calling Baseline Model. 
 
-![Adversarial robustness comparison of five models using 4-layer architectures on CIFAR-10 and CIFAR-100. ](output/cifar100_fgsm_pgd_accuracy_BaselineCNN_ParallelGCNN_RotScale_10_layers_bar_plot.pdf)
-![Adversarial robustness comparison of five models using 10-layer architectures on CIFAR-10 and CIFAR-100](output/cifar10_100_10layers_adversarial_accuracy_all_models_combined%20(1).pdf)
+![Adversarial robustness comparison of five models using 4-layer architectures on CIFAR-10 and CIFAR-100. ](output/cifar100_fgsm_pgd_accuracy_BaselineCNN_ParallelGCNN_RotScale_10_layers_bar_plot.jpg)
+![Adversarial robustness comparison of five models using 10-layer architectures on CIFAR-10 and CIFAR-100](output/cifar10_100_10layers_adversarial_accuracy_all_models_combined_with_errorbars.jpg)
 ![Ablation study results on CIFAR-100 comparing the adversarial robustness of four models under FGSM (left) and PGD (right) attacks ](output/cifar10_100_adversarial_accuracy_all_models_combined.pdf)
-![Visualization of perturbation tolerance](output/Img19.pdf)
-![Visualization of perturbation tolerance](output/Img22.pdf)
-![Visualization of perturbation tolerance](output/Img29.pdf)
+![Visualization of perturbation tolerance](output/Img19.jpg)
+![Visualization of perturbation tolerance](output/Img22.jpg)
+![Visualization of perturbation tolerance](output/Img29.jpg)
 
 To generate visualization run, Make sure you corrected the models path 
 
