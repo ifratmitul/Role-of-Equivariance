@@ -1,9 +1,30 @@
 
 # Bridging Symmetry and Robustness: On the Role of Equivariance in Enhancing Adversarial Robustness
 
-This repository is the official implementation of our paper Bridging Symmetry and Robustness: On the Role of Equivariance in Enhancing Adversarial Robustness. 
+This repository is the official implementation of our NeurIPS 2025 paper **"Bridging Symmetry and Robustness: On the Role of Equivariance in Enhancing Adversarial Robustness"**.
 
->📋  This work explores enhancing adversarial robustness in CNNs by integrating rotation- and scale-equivariant convolutions, aligning model behavior with structured input transformations. The proposed symmetry-aware architectures improve robustness and generalization across benchmarks like CIFAR-10 and CIFAR-100—without the need for adversarial training—offering an efficient alternative to traditional defense methods.
+## Abstract
+
+Adversarial examples reveal critical vulnerabilities in deep neural networks by exploiting their sensitivity to imperceptible input perturbations. While adversarial training remains the predominant defense strategy, it often incurs significant computational cost and may compromise clean-data accuracy. In this work, we investigate an architectural approach to adversarial robustness by embedding group-equivariant convolutions—specifically, rotation- and scale-equivariant layers—into standard convolutional neural networks (CNNs). These layers encode symmetry priors that align model behavior with structured transformations in the input space, promoting smoother decision boundaries and greater resilience to adversarial attacks. We propose and evaluate two symmetry-aware architectures: a parallel design that processes standard and equivariant features independently before fusion, and a cascaded design that applies equivariant operations sequentially. Theoretically, we demonstrate that such models reduce hypothesis space complexity, regularize gradients, and yield tighter certified robustness bounds under the CLEVER (Cross Lipschitz Extreme Value for nEtwork Robustness) framework. Empirically, our models consistently improve adversarial robustness and generalization across CIFAR-10, CIFAR-100, and CIFAR-10C under both FGSM and PGD attacks, without requiring adversarial training. These findings underscore the potential of symmetry-enforcing architectures as efficient and principled alternatives to data augmentation-based defenses.
+
+## Key Highlights
+
+✨ **Architectural Defense**: Achieve adversarial robustness through symmetry priors, without adversarial training  
+🎯 **Strong Performance**: 2-3x improvement over baseline CNNs under PGD attacks  
+📊 **Comprehensive Evaluation**: Tested on CIFAR-10, CIFAR-100, and CIFAR-10C  
+🔬 **Theoretical Guarantees**: Tighter CLEVER-certified robustness bounds via orbit-invariant gradients  
+
+## Citation
+
+If you find this work useful in your research, please consider citing:
+```bibtex
+@article{wang2025bridging,
+  title={Bridging Symmetry and Robustness: On the Role of Equivariance in Enhancing Adversarial Robustness},
+  author={Wang, Longwei and Uddin, Ifrat Ikhtear and Santosh, KC and Zhang, Chaowei and Qin, Xiao and Zhou, Yang},
+  journal={arXiv preprint arXiv:2510.16171},
+  year={2025}
+}
+```
 
 ## Requirements
 
@@ -110,8 +131,5 @@ To generate visualization run, Make sure you corrected the models path
 
 ```visual
 python visual/visualization.py
-```# Role-of-Equivariance
+```
 
-## Contributing
-
->📋  Feel free to use the code and make Improvements. 
