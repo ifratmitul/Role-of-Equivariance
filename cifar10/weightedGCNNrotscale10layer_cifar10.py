@@ -1,3 +1,4 @@
+# cifar10/weightedGCNNrotscale10layer_cifar10.py
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

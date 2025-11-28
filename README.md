@@ -43,12 +43,9 @@ The project directory contains the following key folders:
 
 - **dataset**: This folder contains the **CIFAR-10-C** dataset used in the experiments.
 
-- **models**: This folder includes pretrained models. Refer to the model name to identify which dataset it was trained on.
-
 ### Running the Experiments
 
 We will guide you through how to run each experiment using the corresponding dataset, from training to evaluating the model's robustness.
-
 
 
 ### Training Models on different Datasets
