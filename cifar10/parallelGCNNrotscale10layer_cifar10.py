@@ -11,7 +11,7 @@ class BaselineCNNWithParallelScaleAndRotEquivariance(nn.Module):
         super(BaselineCNNWithParallelScaleAndRotEquivariance, self).__init__()
         
         # Define rotational symmetry group
-        self.rot_gspace = gspaces.Rot2dOnR2(N=8)  # Rotational symmetry with 8 discrete angles
+        self.rot_gspace = gspaces.Rot2dOnR2(N=4)  # Rotational symmetry with 4 discrete angles, change it if needed.
 
         # Define field types for equivariant convolution
         self.feat_type_in_rot = enn.FieldType(self.rot_gspace, input_channels * [self.rot_gspace.trivial_repr])
