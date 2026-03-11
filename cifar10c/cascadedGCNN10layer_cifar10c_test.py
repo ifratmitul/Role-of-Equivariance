@@ -103,45 +103,40 @@ class CascadedGCNN(nn.Module):
 
 # FGSM Attack
 def fgsm_attack(model, images, labels, epsilon):
-    images.requires_grad = True
-    outputs = model(images)
+    adv_images = images.clone().detach().requires_grad_(True)
+    outputs = model(adv_images)
     loss = criterion(outputs, labels)
-
-    # Clear gradients
     model.zero_grad()
-
-    # Compute gradients
-    loss.backward(retain_graph=True)  # Ensure the graph is retained for further steps if needed
-
-    # Generate adversarial examples
-    grad = images.grad.sign()
-    perturbed_images = images + epsilon * grad
-
-    # Detach the tensor to ensure no further graph is connected
-    return perturbed_images.detach().clamp(0, 1)
+    loss.backward()
+    data_grad = adv_images.grad.data
+    perturbed_images = adv_images + epsilon * data_grad.sign()
+    perturbed_images = torch.clamp(perturbed_images, -1, 1)
+    return perturbed_images.detach()
 
 # PGD Attack
-def pgd_attack(model, images, labels, epsilon, alpha=0.01, num_steps=40):
-    original_images = images.clone().detach().to(device)
-    perturbed_images = images.clone().detach().to(device).requires_grad_(True)
+def pgd_attack(model, images, labels, epsilon, alpha=0.01, num_steps=40, random_start=True):
+    ori_images = images.clone().detach()
+    adv_images = images.clone().detach()
+
+    # Random initialization within epsilon-ball (required for true PGD)
+    if random_start:
+        adv_images = adv_images + torch.empty_like(adv_images).uniform_(-epsilon, epsilon)
+        adv_images = torch.clamp(adv_images, -1, 1).detach()
 
     for _ in range(num_steps):
-        outputs = model(perturbed_images)
+        adv_images_var = adv_images.clone().detach().requires_grad_(True)
+        outputs = model(adv_images_var)
         loss = criterion(outputs, labels)
-
-        # Clear gradients
         model.zero_grad()
+        loss.backward()
+        data_grad = adv_images_var.grad.data
+        adv_images = adv_images + alpha * data_grad.sign()
 
-        # Compute gradients
-        loss.backward(retain_graph=True)  # Retain the graph for iterative updates
+        # Project back to epsilon-ball, then to valid input range
+        eta = torch.clamp(adv_images - ori_images, min=-epsilon, max=epsilon)
+        adv_images = torch.clamp(ori_images + eta, -1, 1).detach()
 
-        # Apply PGD update
-        grad = perturbed_images.grad.sign()
-        perturbed_images = perturbed_images + alpha * grad
-        perturbed_images = torch.clamp(perturbed_images, original_images - epsilon, original_images + epsilon)
-        perturbed_images = torch.clamp(perturbed_images, 0, 1).detach().requires_grad_(True)
-
-    return perturbed_images.detach()
+    return adv_images
 
 # CIFAR-10C dataset loader
 def load_cifar10c_data(data_dir, batch_size):

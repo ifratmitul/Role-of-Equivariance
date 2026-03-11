@@ -72,31 +72,40 @@ print("Model loaded from 'baselineCNN10layer_cifar10.pth'")
 
 # FGSM Attack
 def fgsm_attack(model, images, labels, epsilon):
-    # Ensure requires_grad is set properly
-    images = images.clone().detach().requires_grad_(True)
-    outputs = model(images)
+    adv_images = images.clone().detach().requires_grad_(True)
+    outputs = model(adv_images)
     loss = F.cross_entropy(outputs, labels)
     model.zero_grad()
     loss.backward()
-    perturbation = epsilon * images.grad.sign()
-    adversarial_images = images + perturbation
-    adversarial_images = torch.clamp(adversarial_images, 0, 1)  # Clip to valid range
-    return adversarial_images
+    data_grad = adv_images.grad.data
+    perturbed_images = adv_images + epsilon * data_grad.sign()
+    perturbed_images = torch.clamp(perturbed_images, -1, 1)
+    return perturbed_images.detach()
 
 # PGD Attack
-def pgd_attack(model, images, labels, epsilon, alpha, num_iter):
-    original_images = images.clone().detach()
-    for i in range(num_iter):
-        images = images.clone().detach().requires_grad_(True)
-        outputs = model(images)
+def pgd_attack(model, images, labels, epsilon, alpha, num_iter, random_start=True):
+    ori_images = images.clone().detach()
+    adv_images = images.clone().detach()
+
+    # Random initialization within epsilon-ball (required for true PGD)
+    if random_start:
+        adv_images = adv_images + torch.empty_like(adv_images).uniform_(-epsilon, epsilon)
+        adv_images = torch.clamp(adv_images, -1, 1).detach()
+
+    for _ in range(num_iter):
+        adv_images_var = adv_images.clone().detach().requires_grad_(True)
+        outputs = model(adv_images_var)
         loss = F.cross_entropy(outputs, labels)
         model.zero_grad()
         loss.backward()
-        perturbation = alpha * images.grad.sign()
-        images = images + perturbation
-        images = torch.clamp(images, original_images - epsilon, original_images + epsilon)  # Project into epsilon-ball
-        images = torch.clamp(images, 0, 1)  # Clip to valid range
-    return images
+        data_grad = adv_images_var.grad.data
+        adv_images = adv_images + alpha * data_grad.sign()
+
+        # Project back to epsilon-ball, then to valid input range
+        eta = torch.clamp(adv_images - ori_images, min=-epsilon, max=epsilon)
+        adv_images = torch.clamp(ori_images + eta, -1, 1).detach()
+
+    return adv_images
 
 # Evaluate Model under Attack
 def evaluate_attack(model, test_loader, attack_fn, epsilon, **kwargs):

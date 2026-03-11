@@ -7,10 +7,6 @@ from torch.utils.data import DataLoader
 from e2cnn import gspaces, nn as enn
 from model import FullyGEquivariantCNN10
 
-# CIFAR-10 normalization: mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010)
-# Valid normalized pixel range (per channel min/max → scalar approximation)
-# min: (0 - max_mean) / min_std ≈ -2.43
-# max: (1 - min_mean) / min_std ≈ 2.75
 CLIP_MIN = -2.43
 CLIP_MAX = 2.75
 
@@ -78,7 +74,6 @@ def evaluate_clean_accuracy(model, loader, device):
 
 
 def evaluate_attack(model, loader, attack_fn, epsilon, attack_name, device):
-    # Keep model in eval mode throughout — model.train() would corrupt BN/Dropout behavior.
     # Use torch.enable_grad() only where gradients are needed.
     model.eval()
     correct = 0

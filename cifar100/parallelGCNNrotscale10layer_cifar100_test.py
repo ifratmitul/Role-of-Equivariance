@@ -150,29 +150,38 @@ test_dataset = datasets.CIFAR100(root='./datasets', train=False, transform=trans
 test_loader = DataLoader(test_dataset, batch_size=128, shuffle=False)
 
 def fgsm_attack(model, images, labels, epsilon):
-    images.requires_grad = True
-    outputs = model(images)
+    adv_images = images.clone().detach().requires_grad_(True)
+    outputs = model(adv_images)
     loss = F.cross_entropy(outputs, labels)
     model.zero_grad()
     loss.backward()
-    perturbation = epsilon * images.grad.sign()
-    adversarial_images = images + perturbation
-    adversarial_images = torch.clamp(adversarial_images, -1, 1)
-    return adversarial_images
+    data_grad = adv_images.grad.data
+    perturbed_images = adv_images + epsilon * data_grad.sign()
+    perturbed_images = torch.clamp(perturbed_images, -1, 1)
+    return perturbed_images.detach()
 
-def pgd_attack(model, images, labels, epsilon, alpha=0.01, num_iter=40):
-    adv_images = images.clone().detach().to(device)
-    adv_images.requires_grad = True
+def pgd_attack(model, images, labels, epsilon, alpha=0.01, num_iter=40, random_start=True):
+    ori_images = images.clone().detach()
+    adv_images = images.clone().detach()
+
+    # Random initialization within epsilon-ball (required for true PGD)
+    if random_start:
+        adv_images = adv_images + torch.empty_like(adv_images).uniform_(-epsilon, epsilon)
+        adv_images = torch.clamp(adv_images, -1, 1).detach()
+
     for _ in range(num_iter):
-        outputs = model(adv_images)
+        adv_images_var = adv_images.clone().detach().requires_grad_(True)
+        outputs = model(adv_images_var)
         loss = F.cross_entropy(outputs, labels)
         model.zero_grad()
         loss.backward()
-        perturbation = alpha * adv_images.grad.sign()
-        adv_images = adv_images + perturbation
-        perturbation = torch.clamp(adv_images - images, -epsilon, epsilon)
-        adv_images = torch.clamp(images + perturbation, -1, 1).detach_()
-        adv_images.requires_grad = True
+        data_grad = adv_images_var.grad.data
+        adv_images = adv_images + alpha * data_grad.sign()
+
+        # Project back to epsilon-ball, then to valid input range
+        eta = torch.clamp(adv_images - ori_images, min=-epsilon, max=epsilon)
+        adv_images = torch.clamp(ori_images + eta, -1, 1).detach()
+
     return adv_images
 
 def evaluate_attack(model, loader, attack_fn, epsilon, attack_name):

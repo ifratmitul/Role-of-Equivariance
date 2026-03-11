@@ -151,40 +151,40 @@ model.eval()
 
 # Define FGSM Attack
 def fgsm_attack(model, images, labels, epsilon):
-    images.requires_grad = True
-    outputs = model(images)
+    adv_images = images.clone().detach().requires_grad_(True)
+    outputs = model(adv_images)
     loss = F.cross_entropy(outputs, labels)
     model.zero_grad()
-    loss.backward(retain_graph=True)  # Retain the computation graph
-    data_grad = images.grad.data
-    perturbed_images = images + epsilon * data_grad.sign()
-    return torch.clamp(perturbed_images, -1, 1)
+    loss.backward()
+    data_grad = adv_images.grad.data
+    perturbed_images = adv_images + epsilon * data_grad.sign()
+    perturbed_images = torch.clamp(perturbed_images, -1, 1)
+    return perturbed_images.detach()
 
 # Define PGD Attack
-def pgd_attack(model, images, labels, epsilon, alpha=0.01, iters=40):
-    perturbed_images = images.clone().detach().to(device)
-    perturbed_images.requires_grad = True
-    
-    for _ in range(iters):
-        outputs = model(perturbed_images)
-        loss = F.cross_entropy(outputs, labels)
-        
-        model.zero_grad()
-        loss.backward(retain_graph=True)  
-        data_grad = perturbed_images.grad.data
-        
-        # Update perturbed images
-        perturbed_images = perturbed_images + alpha * data_grad.sign()
-        
-        # Clamp to ensure within valid pixel range
-        perturbed_images = torch.clamp(perturbed_images, images - epsilon, images + epsilon)
-        perturbed_images = torch.clamp(perturbed_images, -1, 1)
-        
-        # Detach to clear the computation graph for the next iteration
-        perturbed_images = perturbed_images.detach().clone()
-        perturbed_images.requires_grad = True  # Re-enable gradients for the next iteration
+def pgd_attack(model, images, labels, epsilon, alpha=0.01, iters=40, random_start=True):
+    ori_images = images.clone().detach()
+    adv_images = images.clone().detach()
 
-    return perturbed_images
+    # Random initialization within epsilon-ball (required for true PGD)
+    if random_start:
+        adv_images = adv_images + torch.empty_like(adv_images).uniform_(-epsilon, epsilon)
+        adv_images = torch.clamp(adv_images, -1, 1).detach()
+
+    for _ in range(iters):
+        adv_images_var = adv_images.clone().detach().requires_grad_(True)
+        outputs = model(adv_images_var)
+        loss = F.cross_entropy(outputs, labels)
+        model.zero_grad()
+        loss.backward()
+        data_grad = adv_images_var.grad.data
+        adv_images = adv_images + alpha * data_grad.sign()
+
+        # Project back to epsilon-ball, then to valid input range
+        eta = torch.clamp(adv_images - ori_images, min=-epsilon, max=epsilon)
+        adv_images = torch.clamp(ori_images + eta, -1, 1).detach()
+
+    return adv_images
 
 # Test Function
 def test_with_attack(model, test_loader, attack, epsilon):

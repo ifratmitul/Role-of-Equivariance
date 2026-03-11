@@ -127,32 +127,40 @@ class ImprovedParallelGCNN(nn.Module):
 
 # FGSM attack
 def fgsm_attack(model, images, labels, epsilon):
-    images.requires_grad = True
-    outputs = model(images)
+    adv_images = images.clone().detach().requires_grad_(True)
+    outputs = model(adv_images)
     loss = nn.CrossEntropyLoss()(outputs, labels)
     model.zero_grad()
-    loss.backward(retain_graph=True)
-    grad = images.grad.sign()
-    perturbed_images = images + epsilon * grad
-    return torch.clamp(perturbed_images, 0, 1)
+    loss.backward()
+    data_grad = adv_images.grad.data
+    perturbed_images = adv_images + epsilon * data_grad.sign()
+    perturbed_images = torch.clamp(perturbed_images, -1, 1)
+    return perturbed_images.detach()
 
 # PGD attack
-def pgd_attack(model, images, labels, epsilon, alpha=0.01, num_steps=40):
-    original_images = images.clone().detach()
-    perturbed_images = images.clone().detach()
+def pgd_attack(model, images, labels, epsilon, alpha=0.01, num_steps=40, random_start=True):
+    ori_images = images.clone().detach()
+    adv_images = images.clone().detach()
+
+    # Random initialization within epsilon-ball (required for true PGD)
+    if random_start:
+        adv_images = adv_images + torch.empty_like(adv_images).uniform_(-epsilon, epsilon)
+        adv_images = torch.clamp(adv_images, -1, 1).detach()
 
     for _ in range(num_steps):
-        perturbed_images.requires_grad = True
-        outputs = model(perturbed_images)
+        adv_images_var = adv_images.clone().detach().requires_grad_(True)
+        outputs = model(adv_images_var)
         loss = nn.CrossEntropyLoss()(outputs, labels)
         model.zero_grad()
-        loss.backward(retain_graph=True)  # Fix: Retain graph for multiple backward passes
-        grad = perturbed_images.grad.sign()
-        perturbed_images = perturbed_images.detach() + alpha * grad
-        perturbed_images = torch.max(torch.min(perturbed_images, original_images + epsilon), original_images - epsilon)
-        perturbed_images = perturbed_images.clamp(0, 1)
+        loss.backward()
+        data_grad = adv_images_var.grad.data
+        adv_images = adv_images + alpha * data_grad.sign()
 
-    return perturbed_images
+        # Project back to epsilon-ball, then to valid input range
+        eta = torch.clamp(adv_images - ori_images, min=-epsilon, max=epsilon)
+        adv_images = torch.clamp(ori_images + eta, -1, 1).detach()
+
+    return adv_images
 
 # Load CIFAR-10-C dataset
 def load_cifar10c(data_dir, corruption_type):
